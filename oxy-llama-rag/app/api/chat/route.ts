@@ -52,10 +52,35 @@ export async function POST(request: NextRequest) {
     const chatEngine = await createChatEngine(llm);
 
     // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
-    const userMessageContent = convertMessageContent(
-      userMessage.content,
-      data?.imageUrl,
-    );
+
+    // Reginald : customization here, since the followin code does not compile (userMessage.content is not always of type 'string')
+    // const userMessageContent = convertMessageContent(
+    //   userMessage.content,
+    //   data?.imageUrl,
+    // );
+
+    let userMessageText = '';
+    // Check if userMessage.content is already a string, or needs conversion
+    if (typeof userMessage.content === 'string') {
+      userMessageText = userMessage.content;
+    } else if (userMessage.content instanceof Array) {
+      // If it's an array (of MessageContentDetail presumably), extract the text parts
+      userMessageText = userMessage.content.map((detail) => {
+        if (detail.type === 'text') {
+          return detail.text;
+        }
+        return ''; // or some other logic to handle non-text content
+      }).join(' '); // Join all text parts into a single string
+    } else {
+      // Handle other types, maybe it's an object with a text property?
+      userMessageText = userMessage.content.text || '';
+    }
+
+   // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
+   const userMessageContent = convertMessageContent(
+    userMessageText,
+    data?.imageUrl,
+  );
 
     // Calling LlamaIndex's ChatEngine to get a streamed response
     const response = await chatEngine.chat({
