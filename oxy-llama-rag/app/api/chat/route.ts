@@ -60,22 +60,26 @@ export async function POST(request: NextRequest) {
     // );
 
     let userMessageText = '';
-    // Check if userMessage.content is already a string, or needs conversion
-    if (typeof userMessage.content === 'string') {
-      userMessageText = userMessage.content;
-    } else if (userMessage.content instanceof Array) {
-      // If it's an array (of MessageContentDetail presumably), extract the text parts
-      userMessageText = userMessage.content.map((detail) => {
-        if (detail.type === 'text') {
-          return detail.text;
-        }
-        return ''; // or some other logic to handle non-text content
-      }).join(' '); // Join all text parts into a single string
-    } else {
-      // Handle other types, maybe it's an object with a text property?
-      userMessageText = userMessage.content.text || '';
-    }
-
+    // Directly checking if the content is an object with a text property
+     if (typeof userMessage.content === 'object' && userMessage.content !== null && 'text' in userMessage.content) {
+       // Reginald : todo: check if this is the correct way to extract text from the user message
+       userMessageText = typeof userMessage.content.text === 'string' ? userMessage.content.text : '';
+     } else if (typeof userMessage.content === 'string') {
+       userMessageText = userMessage.content;
+     } else if (Array.isArray(userMessage.content)) {
+       // If it's an array, extract the text parts
+       userMessageText = userMessage.content.map((detail) => {
+         if (typeof detail === 'object' && detail !== null && 'text' in detail) {
+           return detail.text;
+         }
+         return ''; // Handle non-text content or invalid detail objects
+       }).join(' '); // Join all text parts into a single string
+     } else {
+       // If userMessage.content is neither a string nor an array of objects,
+       // and not an object with a text property, set it as an empty string.
+       userMessageText = '';
+     }
+ 
    // Convert message content from Vercel/AI format to LlamaIndex/OpenAI format
    const userMessageContent = convertMessageContent(
     userMessageText,
