@@ -66,7 +66,7 @@ export default function ChatInput(
         <Input
           autoFocus
           name="message"
-          placeholder="Type a message"
+          placeholder="Saisissez votre question sur la comptabilit&eacute;"
           className="flex-1"
           value={props.input}
           onChange={props.handleInputChange}
